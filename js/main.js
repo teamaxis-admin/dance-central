@@ -31,38 +31,121 @@ function updateHeader() { header.classList.toggle("scrolled", window.scrollY > 1
 window.addEventListener("scroll", updateHeader, { passive: true });
 updateHeader();
 
-// The moving mark is a decorative copy; the real home link stays in place.
-function animateBrand() {
-  if (reducedMotion.matches || window.scrollY > 80) return;
+// Fragmentos del propio símbolo: se abren y se reúnen sobre el logo real.
+// El enlace de inicio permanece en su sitio y siempre funciona.
+async function animateBrand() {
+  if (reducedMotion.matches || window.scrollY > 80 || document.hidden) return;
   const mark = document.querySelector(".brand-mark");
-  if (typeof mark.animate !== "function") return;
+  if (!mark || typeof mark.animate !== "function" || !CSS.supports("clip-path", "polygon(0 0, 100% 0, 0 100%)")) return;
+  try { await mark.decode(); } catch { return; }
+  if (reducedMotion.matches || window.scrollY > 80 || document.hidden) return;
+
   const copy = mark.cloneNode();
   copy.className = "brand-intro";
   copy.alt = "";
   copy.setAttribute("aria-hidden", "true");
-  document.body.append(copy);
+  const layer = document.createElement("div");
+  layer.className = "brand-intro-layer";
+  layer.setAttribute("aria-hidden", "true");
+  layer.append(copy);
+  document.body.append(layer);
   const source = copy.getBoundingClientRect();
   const target = mark.getBoundingClientRect();
-  document.body.classList.add("intro-brand-hidden");
-  const motion = copy.animate([
-    { opacity: 0, transform: "translate(55px, -60px) scale(.72) rotate(12deg)", offset: 0 },
-    { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .25 },
-    { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .4 },
-    { opacity: 1, transform: `translate(${target.left - source.left}px, ${target.top - source.top}px) scale(${target.width / source.width}, ${target.height / source.height})`, offset: 1 }
-  ], { duration: 2100, easing: "cubic-bezier(.22,.7,.2,1)", fill: "forwards" });
-  copy.style.transformOrigin = "top left";
+  if (!source.width || !target.width) { layer.remove(); return; }
+
+  const fragments = [];
+  const motions = [];
+  let finished = false;
   const finish = () => {
-    copy.remove();
+    if (finished) return;
+    finished = true;
     document.body.classList.remove("intro-brand-hidden");
+    motions.forEach(motion => motion.cancel());
+    fragments.forEach(fragment => fragment.remove());
+    layer.remove();
     window.removeEventListener("resize", finish);
     window.removeEventListener("scroll", finish);
+    window.removeEventListener("pagehide", finish);
+    document.removeEventListener("visibilitychange", onVisibility);
     reducedMotion.removeEventListener("change", finish);
   };
-  motion.onfinish = finish;
-  motion.oncancel = finish;
+  const onVisibility = () => { if (document.hidden) finish(); };
   window.addEventListener("resize", finish, { once: true });
   window.addEventListener("scroll", finish, { once: true, passive: true });
+  window.addEventListener("pagehide", finish, { once: true });
+  document.addEventListener("visibilitychange", onVisibility);
   reducedMotion.addEventListener("change", finish, { once: true });
+
+  try {
+    // Menos piezas en móvil. Los triángulos encajan sin inventar otra silueta.
+    const compact = !desktop.matches;
+    const columns = compact ? 3 : 4;
+    const rows = compact ? 4 : 6;
+    const scaleX = target.width / source.width;
+    const scaleY = target.height / source.height;
+    const travelX = target.left - source.left;
+    const travelY = target.top - source.top;
+    const tiles = document.createDocumentFragment();
+
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        const x0 = column / columns;
+        const x1 = (column + 1) / columns;
+        const y0 = row / rows;
+        const y1 = (row + 1) / rows;
+        const triangles = (row + column) % 2
+          ? [[[x0, y0], [x1, y0], [x0, y1]], [[x1, y0], [x1, y1], [x0, y1]]]
+          : [[[x0, y0], [x1, y0], [x1, y1]], [[x0, y0], [x1, y1], [x0, y1]]];
+
+        triangles.forEach((points, half) => {
+          const fragment = mark.cloneNode();
+          fragment.className = "brand-fragment";
+          fragment.alt = "";
+          fragment.setAttribute("aria-hidden", "true");
+          const cx = points.reduce((sum, point) => sum + point[0], 0) / 3;
+          const cy = points.reduce((sum, point) => sum + point[1], 0) / 3;
+          const originX = cx * source.width;
+          const originY = cy * source.height;
+          const angle = Math.atan2(cy - .5, cx - .5);
+          const scatter = (compact ? 30 : 48) + ((row * 7 + column * 11 + half * 5) % 19);
+          const burstX = Math.cos(angle) * scatter;
+          const burstY = Math.sin(angle) * scatter;
+          const rotation = ((row * 17 + column * 23 + half * 31) % 67) - 33;
+          // Corrige el origen individual para que todas las piezas encajen al final.
+          const endX = travelX + originX * (scaleX - 1);
+          const endY = travelY + originY * (scaleY - 1);
+          Object.assign(fragment.style, {
+            left: `${source.left}px`, top: `${source.top}px`,
+            width: `${source.width}px`, height: `${source.height}px`,
+            clipPath: `polygon(${points.map(([x, y]) => `${x * 100}% ${y * 100}%`).join(",")})`,
+            transformOrigin: `${originX}px ${originY}px`
+          });
+          fragments.push(fragment);
+          tiles.append(fragment);
+          const motion = fragment.animate([
+            { opacity: 1, transform: "translate(0, 0) rotate(0deg) scale(1)", offset: 0, easing: "cubic-bezier(.16,.7,.3,1)" },
+            { opacity: .95, transform: `translate(${burstX}px, ${burstY}px) rotate(${rotation}deg) scale(.88)`, offset: .27, easing: "cubic-bezier(.55,0,.25,1)" },
+            { opacity: 1, transform: `translate(${endX}px, ${endY}px) rotate(0deg) scale(${scaleX}, ${scaleY})`, offset: .91 },
+            { opacity: 1, transform: `translate(${endX}px, ${endY}px) rotate(0deg) scale(${scaleX}, ${scaleY})`, offset: 1 }
+          ], { duration: 1650 + ((row + column + half) % 3) * 45, delay: 600, fill: "forwards" });
+          motions.push(motion);
+        });
+      }
+    }
+    layer.append(tiles);
+    motions.push(copy.animate([
+      { opacity: 0, transform: "translate(45px, -45px) scale(.75) rotate(8deg)", offset: 0, easing: "cubic-bezier(.2,.7,.2,1)" },
+      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .78 },
+      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .98 },
+      { opacity: 0, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: 1 }
+    ], { duration: 610, fill: "forwards" }));
+    document.body.classList.add("intro-brand-hidden");
+    Promise.all(motions.map(motion => motion.finished)).then(finish, finish);
+  } catch {
+    // Ante una incompatibilidad, el logo real se muestra inmediatamente.
+    Promise.allSettled(motions.map(motion => motion.finished));
+    finish();
+  }
 }
 requestAnimationFrame(animateBrand);
 
