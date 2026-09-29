@@ -237,7 +237,7 @@ body .site-footer { padding-bottom: 102px; }
 .site-header .brand-caption { color: #fff; transition: color .25s ease; }
 .site-header.menu-open .brand-name { color: #396846; }
 .site-header.scrolled { --nav-paint: #e6c65b; }
-.site-header.scrolled .brand-name { color: #846200; }
+.site-header.scrolled .brand-name { color: #a18b50; }
 .site-header.scrolled .brand-caption, .site-header.menu-open .brand-caption { color: #191b19; }
 
 /* A dry paint swipe fills behind each navigation label without moving it. */
@@ -247,6 +247,9 @@ body .site-footer { padding-bottom: 102px; }
   transition: color .2s ease, border-color .2s ease;
 }
 .desktop-nav a::after { display: none; }
+.desktop-nav a[href="#shows"], .mobile-menu a[href="#shows"] { --nav-paint: #e4d390; }
+.desktop-nav a[href="#estudio"], .mobile-menu a[href="#estudio"] { --nav-paint: #b2c7a5; }
+.desktop-nav a[href="#clases"], .mobile-menu a[href="#clases"] { --nav-paint: #dfa099; }
 .desktop-nav a::before, .header-contact::before, .mobile-menu a::before {
   content: '';
   position: absolute;
