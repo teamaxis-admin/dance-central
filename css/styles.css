@@ -237,7 +237,7 @@ body .site-footer { padding-bottom: 102px; }
 .site-header .brand-caption { color: #fff; transition: color .25s ease; }
 .site-header.menu-open .brand-name { color: #396846; }
 .site-header.scrolled { --nav-paint: #e6c65b; }
-.site-header.scrolled .brand-name { color: #a18b50; }
+.site-header.scrolled .brand-name { color: #e7c83e; }
 .site-header.scrolled .brand-caption, .site-header.menu-open .brand-caption { color: #191b19; }
 
 /* A dry paint swipe fills behind each navigation label without moving it. */

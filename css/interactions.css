@@ -92,6 +92,27 @@
   .split-ink:hover .split-glyph { animation: letter-rhythm .65s var(--letter-step) both; }
   .submit-button:hover > span[aria-hidden] { transform: translate(3px,-3px); }
 }
+/* Contact has its own gesture: a line draws out and the arrow turns upward. */
+.site-header .header-contact::before, .site-header .mobile-menu a[href="#contacto"]::before { display: none; }
+.site-header .header-contact:is(:hover, :focus-visible, :active),
+.site-header .mobile-menu a[href="#contacto"]:is(:hover, :focus-visible, :active) { color: inherit; border-color: currentColor; }
+.header-contact::after, .mobile-menu a[href="#contacto"]::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform .35s ease;
+}
+.header-contact > span { display: inline-block; transition: transform .35s ease; }
+.header-contact:focus-visible::after, .mobile-menu a[href="#contacto"]:focus-visible::after { transform: scaleX(1); transform-origin: left; }
+.header-contact:focus-visible > span { transform: translateY(-2px) rotate(-45deg); }
+@media (hover: hover) and (pointer: fine) {
+  .header-contact:hover::after, .mobile-menu a[href="#contacto"]:hover::after { transform: scaleX(1); transform-origin: left; }
+  .header-contact:hover > span { transform: translateY(-2px) rotate(-45deg); }
+}
 @media (max-width: 760px) {
   .footer-socials { justify-content: flex-start; gap: 20px; }
   .footer-socials .social-link { min-width: 68px; }

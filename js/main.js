@@ -394,6 +394,19 @@ function trackMotion(element, frames, options) {
 function prepareWords() {
   if (wordsPrepared) return;
   motionHeadings.forEach(heading => {
+    const isHero = heading.id === "hero-title";
+    if (isHero) {
+      // One complete accessible heading; visual letters keep their final space.
+      const textCopy = heading.cloneNode(true);
+      textCopy.querySelectorAll("br").forEach(br => br.replaceWith(" "));
+      const readable = document.createElement("span");
+      readable.className = "sr-only";
+      readable.textContent = textCopy.textContent;
+      const visual = document.createElement("span");
+      visual.setAttribute("aria-hidden", "true");
+      visual.append(...heading.childNodes);
+      heading.append(readable, visual);
+    }
     const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT, {
       acceptNode: node => node.textContent.trim() && !node.parentElement.closest(".split-ink, .sr-only, .motion-word") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
     });
@@ -406,7 +419,14 @@ function prepareWords() {
         else {
           const word = document.createElement("span");
           word.className = "motion-word";
-          word.textContent = part;
+          if (isHero) {
+            for (const character of part) {
+              const letter = document.createElement("span");
+              letter.className = "type-letter";
+              letter.textContent = character;
+              word.append(letter);
+            }
+          } else word.textContent = part;
           fragment.append(word);
         }
       });
@@ -420,16 +440,49 @@ function revealElement(element) {
   if (motionPlayed.has(element) || reducedMotion.matches) return;
   motionPlayed.add(element);
   if (motionHeadings.includes(element)) {
-    const isHero = element.tagName === "H1";
+    if (element.id === "hero-title") {
+      element.querySelectorAll(".type-letter").forEach((letter, index) => {
+        trackMotion(letter, [{ opacity: 0 }, { opacity: 1 }], {
+          duration: 1, delay: 180 + index * 75, easing: "steps(1, end)", fill: "backwards"
+        });
+      });
+      return;
+    }
+    const ease = "cubic-bezier(.2,.7,.2,1)";
+    // Large headings have distinct gestures, each played once on entry.
+    if (element.id === "shows-title" || element.id === "visit-title") {
+      const from = element.id === "shows-title" ? "inset(0 100% 0 0)" : "inset(100% 0 0 0)";
+      trackMotion(element, [{ clipPath: from }, { clipPath: "inset(0 0 0 0)" }], {
+        duration: 1100, easing: ease, fill: "backwards"
+      });
+      return;
+    }
+    if (element.id === "testimonials-title") {
+      trackMotion(element, [{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], {
+        duration: 900, easing: ease, fill: "backwards"
+      });
+      return;
+    }
+    if (element.classList.contains("footer-wordmark")) {
+      trackMotion(element, [{ opacity: 0, transform: "scale(.97)" }, { opacity: 1, transform: "scale(1)" }], {
+        duration: 950, easing: ease, fill: "backwards"
+      });
+      return;
+    }
     const parts = [...element.querySelectorAll(".motion-word, .split-glyph")];
     parts.forEach((part, index) => {
+      let entrance = "translate3d(0, .3em, 0)";
+      if (element.id === "studio-title") entrance = "translate3d(-.2em, 0, 0)";
+      if (element.id === "classes-title") entrance = "perspective(600px) rotateX(35deg) translateY(.18em)";
+      if (element.id === "contact-title") entrance = `translate3d(${index % 2 ? ".25em" : "-.25em"}, 0, 0)`;
+      if (element.closest(".courses")) entrance = "scale(.9)";
       trackMotion(part, [
-        { opacity: 0, transform: "translate3d(0, .48em, 0) rotate(2deg)" },
-        { opacity: 1, transform: "translate3d(0, 0, 0) rotate(0deg)" }
+        { opacity: 0, transform: entrance },
+        { opacity: 1, transform: "none" }
       ], {
-        duration: isHero ? 1000 : 800,
-        delay: (isHero ? 220 : 0) + Math.min(index * (isHero ? 110 : 38), 520),
-        easing: "cubic-bezier(.2,.7,.2,1)", fill: "backwards"
+        duration: 800,
+        delay: Math.min(index * (element.id === "contact-title" ? 100 : 38), 420),
+        easing: ease, fill: "backwards"
       });
     });
   } else {
