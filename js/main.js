@@ -443,7 +443,7 @@ function revealElement(element) {
     if (element.id === "hero-title") {
       element.querySelectorAll(".type-letter").forEach((letter, index) => {
         trackMotion(letter, [{ opacity: 0 }, { opacity: 1 }], {
-          duration: 1, delay: 180 + index * 75, easing: "steps(1, end)", fill: "backwards"
+          duration: 1, delay: 350 + index * 180, easing: "steps(1, end)", fill: "backwards"
         });
       });
       return;
@@ -453,19 +453,19 @@ function revealElement(element) {
     if (element.id === "shows-title" || element.id === "visit-title") {
       const from = element.id === "shows-title" ? "inset(0 100% 0 0)" : "inset(100% 0 0 0)";
       trackMotion(element, [{ clipPath: from }, { clipPath: "inset(0 0 0 0)" }], {
-        duration: 1100, easing: ease, fill: "backwards"
+        duration: 1800, easing: ease, fill: "backwards"
       });
       return;
     }
     if (element.id === "testimonials-title") {
       trackMotion(element, [{ opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0)" }], {
-        duration: 900, easing: ease, fill: "backwards"
+        duration: 1600, easing: ease, fill: "backwards"
       });
       return;
     }
     if (element.classList.contains("footer-wordmark")) {
       trackMotion(element, [{ opacity: 0, transform: "scale(.97)" }, { opacity: 1, transform: "scale(1)" }], {
-        duration: 950, easing: ease, fill: "backwards"
+        duration: 1600, easing: ease, fill: "backwards"
       });
       return;
     }
@@ -480,8 +480,8 @@ function revealElement(element) {
         { opacity: 0, transform: entrance },
         { opacity: 1, transform: "none" }
       ], {
-        duration: 800,
-        delay: Math.min(index * (element.id === "contact-title" ? 100 : 38), 420),
+        duration: 1400,
+        delay: Math.min(index * (element.id === "contact-title" ? 170 : 65), 650),
         easing: ease, fill: "backwards"
       });
     });
