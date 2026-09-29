@@ -1,0 +1,111 @@
+/* Adapted from the social-fill and underline ideas in
+   https://prismic.io/blog/css-hover-effects and the user's supplied example.
+   Local SVG icons keep the effects independent of external icon fonts. */
+.footer-socials { gap: 32px; }
+.footer-socials .social-link { flex-direction: column; gap: 10px; min-width: 76px; padding: 8px 2px; color: #f5f3ed; }
+.footer-socials .social-link > .social-name { margin: 0; font-size: 13px; }
+.social-disc {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+  border: 2px solid #f5f3ed;
+  border-radius: 50%;
+  background: #f5f3ed;
+}
+.social-instagram { --social-fill: linear-gradient(35deg, #b55232, #a52d68 55%, #694198); }
+.social-facebook { --social-fill: #2458a5; }
+.social-youtube { --social-fill: #c92525; }
+.social-disc::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--social-fill);
+  transform: translateY(101%);
+  transition: transform .45s cubic-bezier(.2,.65,.3,1);
+}
+.footer-socials .social-disc svg { position: relative; width: 26px; height: 26px; color: #242124; transition: color .25s, transform .6s cubic-bezier(.2,.65,.3,1); }
+.social-link:is(:focus-visible, :active) .social-disc::before { transform: translateY(0); }
+.footer-socials .social-link:is(:focus-visible, :active) svg { color: #fff; }
+.social-link:focus-visible { outline-color: #f5f3ed; border-radius: 4px; }
+
+/* Draw the accent line while preserving the link's size and reading position. */
+.text-link { position: relative; }
+.text-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .35s ease;
+}
+.text-link:focus-visible::after { transform: scaleX(1); }
+.show-row { position: relative; isolation: isolate; }
+.show-row::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: #71437e0b;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .4s cubic-bezier(.2,.65,.3,1);
+  pointer-events: none;
+}
+.show-row:focus-visible::before { transform: scaleX(1); }
+.show-row:focus-visible { color: var(--plum); }
+
+/* Fill the enquiry button, with the arrow moving in the same direction. */
+.submit-button { position: relative; isolation: isolate; overflow: hidden; }
+.submit-button::before { content: ''; position: absolute; z-index: -1; inset: 0; background: #d9c5e2; transform: translateY(101%); transition: transform .4s cubic-bezier(.2,.65,.3,1); }
+.submit-button > span[aria-hidden] { transition: transform .3s; }
+.submit-button:is(:hover, :focus-visible) { background: var(--paper); }
+.submit-button:focus-visible::before { transform: translateY(0); }
+
+/* A single ripple across the existing diagonal letters; never a looping effect. */
+.split-glyph { --letter-step: 0ms; }
+.split-glyph:nth-child(6n+2) { --letter-step: 35ms; }
+.split-glyph:nth-child(6n+3) { --letter-step: 70ms; }
+.split-glyph:nth-child(6n+4) { --letter-step: 105ms; }
+.split-glyph:nth-child(6n+5) { --letter-step: 140ms; }
+.split-glyph:nth-child(6n+6) { --letter-step: 175ms; }
+@keyframes letter-rhythm {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  40% { transform: translateY(-.065em) rotate(-2deg); }
+  70% { transform: translateY(.015em) rotate(0); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .social-link:hover .social-disc::before { transform: translateY(0); }
+  .footer-socials .social-link:hover svg { color: #fff; }
+  .text-link:hover::after, .show-row:hover::before { transform: scaleX(1); }
+  .submit-button:hover::before { transform: translateY(0); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .footer-socials .social-link:hover svg { transform: rotateY(360deg); }
+  .split-ink:hover .split-glyph { animation: letter-rhythm .65s var(--letter-step) both; }
+  .submit-button:hover > span[aria-hidden] { transform: translate(3px,-3px); }
+}
+@media (max-width: 760px) {
+  .footer-socials { justify-content: flex-start; gap: 20px; }
+  .footer-socials .social-link { min-width: 68px; }
+  .social-disc { width: 54px; height: 54px; }
+  .footer-socials .social-link > .social-name { font-size: 12px; }
+  .footer-bottom { padding-right: 74px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-disc::before, .footer-socials .social-disc svg, .text-link::after,
+  .show-row::before, .submit-button::before, .submit-button > span[aria-hidden] { transition: none; }
+  .split-ink:hover .split-glyph { animation: none; transform: none; }
+}
+@media (forced-colors: active) {
+  .social-disc { border-color: LinkText; background: Canvas; }
+  .footer-socials .social-link svg { color: LinkText; }
+  .social-disc::before, .show-row::before, .submit-button::before { display: none; }
+}
