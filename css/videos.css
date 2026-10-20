@@ -32,7 +32,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  translate: -50% -50%;
+  /* transform y no la propiedad translate: esta ultima no existe antes de
+     Safari 14.1 y el boton de play quedaria en la esquina de la miniatura. */
+  transform: translate(-50%, -50%);
   width: 62px;
   height: 44px;
   display: grid;
@@ -45,7 +47,7 @@
 }
 .video-play svg { width: 42px; height: 42px; }
 .video-open:focus-visible { outline: 3px solid var(--plum); outline-offset: 4px; }
-.video-open:focus-visible .video-play { color: #fff; background: #e0362c; scale: 1.08; }
+.video-open:focus-visible .video-play { color: #fff; background: #e0362c; transform: translate(-50%, -50%) scale(1.08); }
 
 .video-name { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.05; margin-top: 16px; }
 .video-link { display: inline-block; margin-top: 8px; font-size: 11px; letter-spacing: .08em; color: var(--plum); border-bottom: 1px solid transparent; transition: border-color .2s; }
@@ -56,7 +58,7 @@
 .video-cta > p { font-family: var(--display); font-size: 28px; }
 
 @media (hover: hover) and (pointer: fine) {
-  .video-open:hover .video-play { color: #fff; background: #e0362c; scale: 1.08; }
+  .video-open:hover .video-play { color: #fff; background: #e0362c; transform: translate(-50%, -50%) scale(1.08); }
   .video-open:hover .video-link { border-bottom-color: currentColor; }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
