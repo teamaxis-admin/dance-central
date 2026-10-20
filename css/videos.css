@@ -1,0 +1,85 @@
+/* Página de videos. Cada tarjeta es un lanzador hacia YouTube: miniatura
+   local y botón de play, sin iframes. Los videos del estudio no se dejan
+   reproducir fuera de YouTube, así que la tarjeta abre el canal en vez de
+   simular un reproductor que terminaría en error.
+   Si eso cambia, el iframe vuelve sin tocar esta hoja: basta devolver el
+   botón de fachada en el HTML y su inyector en js/videos.js. */
+
+.page-videos { background: var(--paper); }
+.page-videos .site-header { position: fixed; background: var(--paper); color: var(--ink); border-bottom: 1px solid var(--line); }
+.page-videos .site-header .brand-word { color: #191b19; }
+.page-videos .site-header .brand-sub { color: #e7c83e; }
+.page-videos .site-header { --nav-paint: #e6c65b; }
+.video-page { padding-top: 150px; }
+
+.video-intro { display: grid; grid-template-columns: 1.4fr 1fr; gap: 60px; align-items: end; margin-bottom: 64px; }
+.video-intro h1 { font-size: clamp(56px,7vw,112px); line-height: .93; letter-spacing: -.018em; font-family: var(--display); font-weight: 600; }
+.video-intro > p { font-size: 14px; color: var(--muted); max-width: 380px; padding-bottom: 10px; justify-self: end; }
+
+.video-group + .video-group { margin-top: 70px; }
+.video-group-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; border-top: 2px solid #242124; padding-top: 22px; margin-bottom: 30px; }
+.video-group-head h2 { font-size: clamp(34px,4vw,60px); line-height: 1; }
+.video-group-head > p { font-size: 12px; color: var(--muted); text-align: right; }
+.video-group-head > p > span { display: block; margin-top: 5px; font-size: 10px; letter-spacing: .12em; color: var(--plum); }
+
+.video-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 40px 30px; }
+.video-card { min-width: 0; }
+.video-open { display: block; color: inherit; }
+.video-frame { position: relative; display: block; aspect-ratio: 16 / 9; background: #19161d; overflow: hidden; }
+.video-frame > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-frame > img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.65,.3,1); }
+.video-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: 62px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #e0362c;
+  background: #fff;
+  border-radius: 11px;
+  box-shadow: 0 4px 18px #0000004d;
+  transition: color .25s, background-color .25s, scale .25s;
+}
+.video-play svg { width: 42px; height: 42px; }
+.video-open:focus-visible { outline: 3px solid var(--plum); outline-offset: 4px; }
+.video-open:focus-visible .video-play { color: #fff; background: #e0362c; scale: 1.08; }
+
+.video-name { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.05; margin-top: 16px; }
+.video-link { display: inline-block; margin-top: 8px; font-size: 11px; letter-spacing: .08em; color: var(--plum); border-bottom: 1px solid transparent; transition: border-color .2s; }
+.video-open:focus-visible .video-link { border-bottom-color: currentColor; }
+
+.video-foot, .video-cta { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-top: 1px solid var(--line); margin-top: 56px; padding-top: 24px; }
+.video-foot > p, .video-cta > p { font-size: 16px; }
+.video-cta > p { font-family: var(--display); font-size: 28px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .video-open:hover .video-play { color: #fff; background: #e0362c; scale: 1.08; }
+  .video-open:hover .video-link { border-bottom-color: currentColor; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .video-open:hover .video-frame > img { transform: scale(1.04); }
+}
+
+@media (max-width: 1050px) {
+  .video-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 34px 24px; }
+  .video-intro { gap: 36px; }
+}
+@media (max-width: 760px) {
+  .video-page { padding-top: 112px; }
+  .video-intro { display: block; margin-bottom: 42px; }
+  .video-intro > p { margin-top: 24px; max-width: none; }
+  .video-group + .video-group { margin-top: 48px; }
+  .video-group-head { display: block; }
+  .video-group-head > p { text-align: left; margin-top: 10px; }
+  .video-grid { grid-template-columns: 1fr; gap: 30px; }
+  .video-name { font-size: 22px; }
+  .video-foot, .video-cta { display: block; margin-top: 38px; }
+  .video-foot .text-link, .video-cta .text-link { margin-top: 14px; }
+  .video-cta > p { font-size: 24px; }
+}
+@media (forced-colors: active) {
+  .video-play { background: Canvas; color: LinkText; border: 1px solid LinkText; }
+}
