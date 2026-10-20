@@ -37,12 +37,20 @@ async function animateBrand() {
   if (reducedMotion.matches || window.scrollY > 80 || document.hidden) return;
   const mark = document.querySelector(".brand-mark");
   if (!mark || typeof mark.animate !== "function" || !CSS.supports("clip-path", "polygon(0 0, 100% 0, 0 100%)")) return;
-  try { await mark.decode(); } catch { return; }
+  // El logotipo son dos máscaras CSS. Las precargamos para que las piezas no
+  // aparezcan como rectángulos sólidos mientras los archivos se bajan.
+  try {
+    await Promise.all(["dance-dance", "dance-central"].map(file => {
+      const source = new Image();
+      source.src = `assets/logos/${file}.svg`;
+      return source.decode();
+    }));
+  } catch { /* si falla, seguimos: el navegador ya los tiene en camino */ }
   if (reducedMotion.matches || window.scrollY > 80 || document.hidden) return;
 
-  const copy = mark.cloneNode();
+  // Clon profundo: la marca lleva dentro las dos palabras del logotipo.
+  const copy = mark.cloneNode(true);
   copy.className = "brand-intro";
-  copy.alt = "";
   copy.setAttribute("aria-hidden", "true");
   const layer = document.createElement("div");
   layer.className = "brand-intro-layer";
@@ -98,9 +106,8 @@ async function animateBrand() {
           : [[[x0, y0], [x1, y0], [x1, y1]], [[x0, y0], [x1, y1], [x0, y1]]];
 
         triangles.forEach((points, half) => {
-          const fragment = mark.cloneNode();
+          const fragment = mark.cloneNode(true);
           fragment.className = "brand-fragment";
-          fragment.alt = "";
           fragment.setAttribute("aria-hidden", "true");
           const cx = points.reduce((sum, point) => sum + point[0], 0) / 3;
           const cy = points.reduce((sum, point) => sum + point[1], 0) / 3;
@@ -133,11 +140,32 @@ async function animateBrand() {
       }
     }
     layer.append(tiles);
+
+    // Destello al reensamblarse, como el del video de logo del estudio.
+    // Va en una sola pieza encima del destino: animar el resplandor en cada
+    // fragmento multiplicaría el costo de GPU sin verse mejor.
+    const flash = mark.cloneNode(true);
+    flash.className = "brand-flash";
+    flash.setAttribute("aria-hidden", "true");
+    Object.assign(flash.style, {
+      left: `${target.left}px`, top: `${target.top}px`,
+      width: `${target.width}px`, height: `${target.height}px`
+    });
+    layer.append(flash);
+    motions.push(flash.animate([
+      { opacity: 0, filter: "blur(0px)", transform: "scale(1)", offset: 0 },
+      { opacity: 0, filter: "blur(0px)", transform: "scale(1)", offset: .8 },
+      { opacity: .85, filter: "blur(8px)", transform: "scale(1.45)", offset: .88, easing: "cubic-bezier(.2,.8,.3,1)" },
+      { opacity: 0, filter: "blur(16px)", transform: "scale(1.8)", offset: 1 }
+    ], { duration: 1750, delay: 600, fill: "forwards" }));
+
+    // El logotipo entra brillando y el resplandor se asienta.
+    const haze = "drop-shadow(0 6px 20px #00000066)";
     motions.push(copy.animate([
-      { opacity: 0, transform: "translate(45px, -45px) scale(.75) rotate(8deg)", offset: 0, easing: "cubic-bezier(.2,.7,.2,1)" },
-      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .78 },
-      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: .98 },
-      { opacity: 0, transform: "translate(0, 0) scale(1) rotate(0deg)", offset: 1 }
+      { opacity: 0, transform: "translate(45px, -45px) scale(.75) rotate(8deg)", filter: `${haze} drop-shadow(0 0 28px rgba(255,255,255,.9))`, offset: 0, easing: "cubic-bezier(.2,.7,.2,1)" },
+      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", filter: `${haze} drop-shadow(0 0 7px rgba(255,255,255,.3))`, offset: .78 },
+      { opacity: 1, transform: "translate(0, 0) scale(1) rotate(0deg)", filter: `${haze} drop-shadow(0 0 7px rgba(255,255,255,.3))`, offset: .98 },
+      { opacity: 0, transform: "translate(0, 0) scale(1) rotate(0deg)", filter: `${haze} drop-shadow(0 0 7px rgba(255,255,255,.3))`, offset: 1 }
     ], { duration: 610, fill: "forwards" }));
     document.body.classList.add("intro-brand-hidden");
     Promise.all(motions.map(motion => motion.finished)).then(finish, finish);
@@ -174,6 +202,27 @@ videoButton.addEventListener("click", () => {
   if (video.paused) { userPaused = false; playVideo(); }
   else { userPaused = true; video.pause(); }
 });
+// El video de portada se grabó vertical, en celular. En pantallas apaisadas
+// servimos un recorte 16:9 y en las verticales el original, que ahí casi no se
+// recorta. No se usa el atributo media de <source>: dentro de <video> no es
+// fiable (Chrome lo abandonó), a diferencia de <picture>.
+// Sin JavaScript queda el <source> del HTML, que es la versión apaisada.
+const portrait = window.matchMedia("(max-aspect-ratio: 3/4)");
+function pickHeroSource() {
+  if (mediaFailed) return;
+  const vertical = portrait.matches;
+  const file = vertical ? "assets/media/hero-vertical.mp4" : "assets/media/hero.mp4";
+  const poster = vertical ? "assets/media/hero-vertical-poster.webp" : "assets/media/hero-poster.webp";
+  if (video.getAttribute("poster") !== poster) video.setAttribute("poster", poster);
+  if ((video.currentSrc || video.src).endsWith(file)) return;
+  const wasPlaying = !video.paused && !video.ended;
+  video.src = file;
+  video.load();
+  if (wasPlaying) playVideo();
+}
+pickHeroSource();
+portrait.addEventListener("change", pickHeroSource);
+
 function syncVideo() {
   if (document.hidden || !videoInView || reducedMotion.matches || userPaused) video.pause();
   else playVideo();
@@ -272,7 +321,7 @@ for (const course of courses) {
     clip.src = course.video;
     clip.controls = true;
     clip.playsInline = true;
-    clip.muted = true;
+    // Con sonido: solo se reproducen cuando la visitante usa los controles.
     clip.preload = "none";
     if (course.poster) clip.poster = course.poster;
     clip.setAttribute("aria-label", course.alt || course.title);
@@ -297,7 +346,10 @@ for (const course of courses) {
   article.append(media, copy);
   courseTrack.append(article);
 }
-document.querySelector("#course-gallery").hidden = !courseTrack.children.length;
+// Sin anuncios vigentes se oculta la cartelera entera, encabezado incluido.
+const hasCourses = courseTrack.children.length > 0;
+document.querySelector("#course-gallery").hidden = !hasCourses;
+document.querySelector("#cursos").hidden = !hasCourses;
 
 function initCarousel(carousel) {
   const track = carousel.querySelector("[data-carousel-track]");
@@ -308,6 +360,13 @@ function initCarousel(carousel) {
   const counter = carousel.querySelector("[data-carousel-count]");
   let active = 0;
   let frame = 0;
+  // Avance solo si la diapositiva lo pide con data-carousel-autoplay (en ms).
+  // Al hacerlo, las flechas dan la vuelta en lugar de deshabilitarse.
+  const autoplayDelay = Number(carousel.dataset.carouselAutoplay) || 0;
+  const loops = autoplayDelay > 0;
+  let autoplayTimer = 0;
+  let focused = false;
+  let inView = true;
 
   const slideLeft = index => slides[index].offsetLeft - slides[0].offsetLeft;
   function render() {
@@ -318,8 +377,8 @@ function initCarousel(carousel) {
     active = nearest;
     const label = `${String(active + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
     if (counter.textContent !== label) counter.textContent = label;
-    previous.disabled = active === 0;
-    next.disabled = active === slides.length - 1;
+    previous.disabled = !loops && active === 0;
+    next.disabled = !loops && active === slides.length - 1;
     carousel.style.setProperty("--carousel-progress", `${100 * (active + 1) / slides.length}%`);
     slides.forEach((slide, index) => {
       slide.inert = index !== active;
@@ -328,22 +387,63 @@ function initCarousel(carousel) {
     });
   }
   function goTo(index, instant = false) {
-    const target = Math.max(0, Math.min(slides.length - 1, index));
+    const last = slides.length - 1;
+    const target = loops
+      ? (index < 0 ? last : index > last ? 0 : index)
+      : Math.max(0, Math.min(last, index));
     track.scrollTo({ left: slideLeft(target), behavior: instant || reducedMotion.matches ? "instant" : "smooth" });
   }
-  previous.addEventListener("click", () => goTo(active - 1));
-  next.addEventListener("click", () => goTo(active + 1));
+  // Se detiene con el foco dentro, fuera de pantalla, en otra pestaña o con
+  // movimiento reducido. NO se detiene al pasar el cursor por encima: el
+  // carrusel ocupa casi todo el ancho, así que el puntero queda sobre él
+  // casi siempre y el avance parecía no funcionar.
+  function syncAutoplay() {
+    const shouldRun = loops && !reducedMotion.matches && !focused && inView && !document.hidden;
+    if (shouldRun && !autoplayTimer) {
+      autoplayTimer = setInterval(() => goTo(active + 1), autoplayDelay);
+    } else if (!shouldRun && autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = 0;
+    }
+  }
+  function nudge(index) {
+    goTo(index);
+    // Reinicia la cuenta para que un avance manual no se encime con el automático.
+    if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = 0; syncAutoplay(); }
+  }
+  previous.addEventListener("click", () => nudge(active - 1));
+  next.addEventListener("click", () => nudge(active + 1));
   track.addEventListener("scroll", () => {
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(render);
   }, { passive: true });
-  track.addEventListener("keydown", event => {
-    if (event.target !== track) return; // Conserva los atajos de los controles de video.
+  // Las flechas responden desde cualquier punto del carrusel, no solo con el
+  // riel enfocado: tener que tabular hasta él no se descubre nunca.
+  carousel.addEventListener("keydown", event => {
+    if (event.target.closest("video")) return; // Conserva los atajos de los controles de video.
     const destinations = { ArrowLeft: active - 1, ArrowRight: active + 1, Home: 0, End: slides.length - 1 };
     if (!(event.key in destinations)) return;
     event.preventDefault();
-    goTo(destinations[event.key]);
+    nudge(destinations[event.key]);
   });
+  if (loops) {
+    carousel.addEventListener("focusin", () => { focused = true; syncAutoplay(); });
+    carousel.addEventListener("focusout", () => {
+      requestAnimationFrame(() => {
+        focused = carousel.contains(document.activeElement);
+        syncAutoplay();
+      });
+    });
+    document.addEventListener("visibilitychange", syncAutoplay);
+    reducedMotion.addEventListener("change", syncAutoplay);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(entries => {
+        inView = entries[0].isIntersecting;
+        syncAutoplay();
+      }, { threshold: .25 }).observe(carousel);
+    }
+    syncAutoplay();
+  }
   if ("ResizeObserver" in window) {
     let previousWidth = track.clientWidth;
     new ResizeObserver(() => {
@@ -360,7 +460,7 @@ function initCarousel(carousel) {
 }
 document.querySelectorAll("[data-carousel]").forEach(initCarousel);
 
-const galleryVideos = [...document.querySelectorAll(".media-carousel video")];
+const galleryVideos = [...document.querySelectorAll(".media-carousel video, .panel-media video")];
 galleryVideos.forEach(clip => {
   clip.addEventListener("play", () => {
     galleryVideos.forEach(other => { if (other !== clip) other.pause(); });
@@ -379,7 +479,7 @@ document.addEventListener("visibilitychange", () => {
 // El contenido permanece visible sin JavaScript. Las apariciones se ejecutan
 // una vez por elemento, y se completan si se activa movimiento reducido.
 const motionHeadings = [...document.querySelectorAll("h1, h2, .courses h3, .show-row h3, .footer-wordmark")];
-const motionDetails = [...document.querySelectorAll(".section-heading, .shows-intro > p, .studio-copy > p, .studio-photo, .class-poster, .testimonial, .courses-copy, .visit-details, .footer-socials")];
+const motionDetails = [...document.querySelectorAll(".section-heading, .shows-intro > p, .studio-copy > p, .studio-photo, .class-poster, .testimonial-carousel, .courses-copy, .visit-details, .footer-socials")];
 const motionPlayed = new WeakSet();
 const runningMotions = new Set();
 let motionObserver;
@@ -516,3 +616,67 @@ function setupMotion() {
 }
 setupMotion();
 reducedMotion.addEventListener("change", setupMotion);
+
+// Vista por disciplina. Cada estilo tiene su propia ancla (#estilo-...): sin
+// JavaScript los paneles quedan visibles en fila y los enlaces siguen llevando
+// a cada uno. Con JavaScript se muestra uno a la vez, el resto de la sección
+// permanece debajo y el botón de regresar del navegador funciona.
+const classBrowse = document.querySelector("#class-browse");
+const stylePanels = [...document.querySelectorAll(".style-panel")];
+if (classBrowse && stylePanels.length) {
+  const classSection = document.querySelector("#clases");
+  const panelFor = slug => stylePanels.find(panel => panel.id === `estilo-${slug}`);
+  const slugOf = panel => panel.id.replace("estilo-", "");
+
+  function goToSection(instant) {
+    classSection.scrollIntoView({
+      behavior: instant || reducedMotion.matches ? "instant" : "smooth",
+      block: "start"
+    });
+  }
+  function showPanel(panel, moveFocus) {
+    stylePanels.forEach(item => { item.hidden = item !== panel; });
+    classBrowse.hidden = Boolean(panel);
+    // Los videos de un panel cerrado no siguen sonando.
+    galleryVideos.forEach(clip => {
+      const owner = clip.closest(".style-panel");
+      if (owner && owner.hidden) clip.pause();
+    });
+    if (panel && moveFocus) panel.querySelector("h3").focus({ preventScroll: true });
+  }
+  function syncPanel(instant, moveFocus) {
+    const slug = location.hash.match(/^#estilo-([a-z0-9-]+)$/)?.[1];
+    const panel = slug ? panelFor(slug) : null;
+    const wasOpen = stylePanels.some(item => !item.hidden);
+    showPanel(panel, moveFocus);
+    if (panel) { goToSection(instant); return; }
+    // Al cerrar cambia la altura de la sección: recolocamos sobre el destino real.
+    if (!wasOpen) return;
+    const target = document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
+  }
+
+  document.querySelectorAll("[data-style]").forEach(link => {
+    link.addEventListener("click", event => {
+      if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const panel = panelFor(link.dataset.style);
+      if (!panel) return;
+      event.preventDefault();
+      history.pushState(null, "", `#estilo-${link.dataset.style}`);
+      showPanel(panel, true);
+      goToSection(false);
+    });
+  });
+  stylePanels.forEach(panel => {
+    panel.querySelector(".panel-back").addEventListener("click", event => {
+      event.preventDefault();
+      history.pushState(null, "", "#clases");
+      showPanel(null, false);
+      document.querySelector(`[data-style="${slugOf(panel)}"]`)?.focus({ preventScroll: true });
+      goToSection(false);
+    });
+  });
+  window.addEventListener("hashchange", () => syncPanel(false, false));
+  window.addEventListener("popstate", () => syncPanel(false, false));
+  syncPanel(true, false);
+}

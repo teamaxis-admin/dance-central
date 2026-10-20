@@ -1,0 +1,92 @@
+/* Vista por disciplina dentro de la misma sección.
+   Cada estilo es un ancla real (#estilo-...), así que sin JavaScript los
+   enlaces siguen llevando al panel y los paneles quedan visibles en fila.
+   Con JavaScript se muestra uno a la vez y el resto de la página no se mueve. */
+
+.style-list { list-style: none; margin: 0; padding: 0; }
+.style-list > li { border-top: 1px solid var(--line); }
+.style-list > li:last-child { border-bottom: 1px solid var(--line); }
+.style-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 25px 0;
+  font-family: var(--display);
+  font-size: 34px;
+  line-height: 1.1;
+  transition: color .2s ease;
+}
+.style-link > span { font-size: 25px; line-height: 1; transition: transform .25s ease; }
+.style-link:focus-visible { color: var(--plum); }
+.style-link:focus-visible > span { transform: translate(3px,-3px); }
+
+.style-panel { border-top: 2px solid #242124; padding-top: 24px; }
+.panel-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 11px;
+  letter-spacing: .12em;
+  font-weight: 500;
+  color: var(--plum);
+}
+.panel-back > span { font-size: 19px; line-height: 1; transition: transform .25s ease; }
+.panel-back:focus-visible > span { transform: translateX(-4px); }
+.style-panel h3 {
+  font-size: clamp(44px,5.6vw,82px);
+  line-height: .95;
+  margin-top: 14px;
+}
+.style-panel h3:focus { outline: none; }
+.style-panel h3:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; }
+.panel-lead { font-size: 17px; max-width: 540px; margin-top: 18px; }
+.panel-body {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 60px;
+  align-items: start;
+  margin-top: 34px;
+}
+.panel-copy > p { font-size: 14px; color: var(--muted); max-width: 420px; }
+.panel-copy > p + p { margin-top: 14px; }
+.panel-copy .text-link { margin-top: 26px; }
+.panel-media { min-width: 0; }
+.panel-media figcaption { margin-top: 14px; font-size: 9px; letter-spacing: .13em; color: var(--muted); }
+.panel-carousel .carousel-slide img,
+.panel-media > figure > video {
+  width: 100%;
+  aspect-ratio: 1.5;
+  object-fit: cover;
+}
+.panel-media > figure > video { object-fit: contain; background: #211923; }
+.panel-carousel .carousel-bar { padding-bottom: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .style-panel { animation: panel-in .45s cubic-bezier(.2,.7,.2,1) both; }
+}
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .style-link:hover { color: var(--plum); }
+  .style-link:hover > span { transform: translate(3px,-3px); }
+  .panel-back:hover > span { transform: translateX(-4px); }
+}
+
+@media (max-width: 1050px) {
+  .panel-body { gap: 40px; }
+  .style-link { font-size: 29px; }
+}
+@media (max-width: 760px) {
+  .style-link { font-size: 32px; padding: 22px 0; }
+  .style-panel h3 { font-size: clamp(42px,11vw,66px); }
+  .panel-lead { font-size: 15px; margin-top: 15px; }
+  .panel-body { display: block; margin-top: 26px; }
+  .panel-copy > p { max-width: none; }
+  .panel-media { margin-top: 30px; }
+  .panel-copy .text-link { margin-top: 18px; }
+}

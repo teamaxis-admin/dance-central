@@ -1,19 +1,25 @@
-// Material real disponible. Agrega nuevos carteles a esta lista cuando los recibamos.
-// Confirma fechas y precios antes de anunciar como vigente un intensivo anterior.
-window.danceCourses = [
-  {
-    title: "BAILE MODERNO",
-    category: "EN EL SALÓN / CLASES",
-    image: "assets/media/modern-dance.webp",
-    alt: "Cartel de baile moderno de Dance Central: agenda tu clase",
-    caption: "Expresión, coreografía y ganas de moverte. Encuentra un grupo y empieza a bailar con nosotros."
-  },
-  {
-    title: "ASÍ SE VIVE LA DANZA",
-    category: "EN MOVIMIENTO / VIDEO",
-    video: "assets/media/hero.mp4",
-    poster: "assets/media/hero-poster.webp",
-    alt: "Fragmento de video de las clases en Dance Central",
-    caption: "Una mirada al estudio, a sus clases y a la energía de quienes bailan aquí."
-  }
-];
+// Cartelera de intensivos, talleres y cursos de temporada.
+//
+// Aquí NO van los estilos del catálogo (baile moderno, contemporáneo, hip hop,
+// reggaetón, salsa y cumbia): cada uno ya tiene su panel en "Encuentra tu ritmo".
+// Esta lista es solo para lo que se anuncia por temporada y luego se retira.
+//
+// Mientras esté vacía, la cartelera completa —encabezado y galería— se oculta
+// sola. Al agregar un objeto reaparece, sin tocar el HTML.
+//
+// Campos: title y (image o video) son obligatorios. Opcionales: category, alt,
+// caption y poster (respaldo del video).
+//
+//   window.danceCourses = [
+//     {
+//       title: "INTENSIVO DE SALSA Y CUMBIA",
+//       category: "CURSOS Y TALLERES",
+//       image: "assets/media/curso-salsa.webp",
+//       alt: "Cartel del intensivo de salsa y cumbia de Dance Central",
+//       caption: "Confirma fechas y costos antes de anunciarlo como vigente."
+//     }
+//   ];
+//
+// Confirma fechas, horarios y precios con el estudio antes de publicar un
+// anuncio. Evita dejar carteles de ediciones pasadas con etiqueta de vigente.
+window.danceCourses = [];
