@@ -1,109 +1,103 @@
 # Dance Central
 
-Landing page estática en HTML, CSS y JavaScript. No requiere npm, compilación ni backend.
+Sitio estático en HTML, CSS y JavaScript. Sin npm, sin compilación, sin backend.
 
-## Abrir la página
+## Desarrollo
 
-Abre `index.html` en tu navegador. También puedes usar Live Server desde tu editor.
-
-Si tienes Python instalado, ejecuta dentro de esta carpeta:
+Abre `index.html` en el navegador o usa Live Server. Con Python:
 
 ```sh
 python -m http.server 4173 --bind 127.0.0.1
 ```
 
-Después visita http://127.0.0.1:4173. Para revisar con otro dispositivo de tu red, usa la herramienta de previsualización que prefieras y su configuración de acceso local.
+## Arquitectura
 
-## Contenido e interacciones
+Dos páginas:
 
-- Video de portada con reproducción silenciosa, pausa y fotografía de respaldo.
-- Entrada del símbolo desde la esquina superior derecha al cargar la página desde arriba, también al recargar.
-- Menú móvil con control por teclado y cabecera fija al desplazarse.
-- Shows para XV años, bodas y recepciones temáticas. Al elegir uno, queda seleccionado en la consulta.
-- Presentación del estudio y sus clases.
-- Dos carruseles visibles: del estudio al escenario, y cartelera de clases y cursos. Admiten imágenes y videos, flechas, contador, teclado y gestos táctiles.
-- Consulta por WhatsApp con tipo de evento, fecha y comentario. El visitante revisa y envía el mensaje en WhatsApp; la página no envía mensajes automáticamente.
-- Mapa de Google Maps antes del footer, con selector de mapa o satélite, teléfono y enlaces para llegar.
-- Movimiento reducido: sin entrada animada ni reproducción automática del video; los carruseles cambian sin animación. Los videos de las galerías se pausan al salir de la diapositiva o de la pantalla.
+| Archivo | Contenido |
+|---|---|
+| `index.html` | Landing: shows, estudio, clases, experiencias, contacto y ubicación. |
+| `videos.html` | Galería de los showcases publicados en YouTube. |
 
-## Archivos
+**No hay plantillas.** El `<head>`, la cabecera, el footer y el botón de WhatsApp están duplicados en ambos archivos (~55 líneas). Al modificar cualquiera de esos bloques, hay que hacerlo en los dos.
 
-- `index.html`: contenido y estructura.
-- `css/styles.css`: diseño, tipografía y adaptación a pantallas.
-- `js/main.js`: navegación, video, cotización y cartelera.
-- `js/courses.js`: contenido de la cartelera, con imágenes o videos.
-- `assets/media/`: imágenes WebP y video preparados para la web.
-- `assets/fonts/`: Barlow Condensed y su licencia SIL Open Font License.
-- `assets/logos/dance-mark.svg`: símbolo aislado del SVG original para la cabecera.
-- Las imágenes y videos originales permanecen en las carpetas donde los colocaste.
+Los enlaces del menú en `videos.html` apuntan a `index.html#clases`, no a `#clases`: las secciones viven en la landing y un ancla suelta no haría nada.
 
-## Agregar un curso
+### Archivos
 
-1. Guarda su cartel en `assets/images/`, por ejemplo `curso-salsa.jpg`.
-2. Agrega un objeto a la lista de `js/courses.js`:
+```
+index.html
+videos.html
+css/
+  styles.css           base, tipografía, retícula y adaptación a pantallas
+  poster-surfaces.css  texturas y paleta por sección
+  interactions.css     hover y foco
+  class-panels.css     vista por disciplina
+  videos.css           cuadrícula de videos.html
+js/
+  main.js              landing: nav, video, formulario, mapa, carruseles, paneles
+  courses.js           contenido de la cartelera de cursos
+  videos.js            menú de videos.html
+assets/
+  media/               todo lo que el sitio sirve, ya optimizado
+  media/videos/        miniaturas de YouTube
+  logos/               marca
+  fonts/               Barlow Condensed + licencia OFL (la licencia no se borra)
+  textures/            SVG de grano y brochazos
+  images/              material original del cliente, no se sirve
+```
+
+Regla: si algo lo usa el sitio, va en `assets/media/`.
+
+## Versionado de caché
+
+Las referencias a CSS y JS llevan `?v=` con los **primeros 12 caracteres del SHA-256 del archivo**. Evita que un HTML nuevo se mezcle con hojas viejas en caché del navegador.
+
+**Al modificar cualquier archivo de `css/` o `js/`, recalcula su hash y actualiza el `?v=` en las dos páginas.** Si no, los cambios no llegan a quien ya visitó el sitio.
+
+```powershell
+(Get-FileHash css\styles.css -Algorithm SHA256).Hash.ToLower().Substring(0,12)
+```
+
+```sh
+sha256sum css/styles.css | cut -c1-12
+```
+
+## Codificación
+
+UTF-8 **sin BOM**. No edites CSS ni HTML con `Set-Content -Encoding utf8` de PowerShell: añade BOM y corrompe los acentos. Usa el editor o Python con `io.open(..., encoding="utf-8", newline="")`.
+
+## Agregar contenido
+
+**Un curso a la cartelera** — guarda el cartel optimizado en `assets/media/` y añade un objeto a `js/courses.js`:
 
 ```js
 window.danceCourses = [
   {
-    title: "Intensivo de salsa y cumbia",
-    image: "assets/images/curso-salsa.jpg",
-    alt: "Cartel del intensivo de salsa y cumbia de Dance Central",
-    caption: "Curso impartido. Consulta próximas ediciones.",
-    message: "Hola, ¿tendrán nuevas fechas para el intensivo de salsa y cumbia?"
+    title: "INTENSIVO DE SALSA Y CUMBIA",
+    category: "CURSOS Y TALLERES",
+    image: "assets/media/curso-salsa.webp",
+    alt: "Cartel del intensivo de salsa y cumbia",
+    caption: "Consulta próximas fechas."
   }
 ];
 ```
 
-La cartelera muestra un elemento por vez, conserva las proporciones de los carteles y tiene controles visibles con un contador. Incluye el cartel de baile moderno y un fragmento real de las clases. Para añadir video, usa `video` con la ruta del archivo y `poster` con la imagen de respaldo en lugar de `image`. Los campos opcionales `category` y `linkLabel` permiten personalizar el encabezado y el enlace. Una lista vacía oculta únicamente la galería.
+Obligatorios: `title` y (`image` o `video`). Opcionales: `category`, `alt`, `caption`, `poster`.
+Con la lista vacía la cartelera se oculta completa y reaparece sola al agregar un objeto.
 
-Confirma las fechas, horarios y precios antes de anunciar inscripciones vigentes. Evita incluir carteles antiguos con una etiqueta de próxima apertura.
+**Una disciplina** — un `<li>` con `data-style` en la lista de estilos, y un `<article class="style-panel">` con `id="estilo-<slug>"`. El carrusel interno se inicializa solo con `data-carousel`.
 
-## Material utilizado
+**Un video** — guarda la miniatura como `assets/media/videos/video-<ID>.webp` y copia un bloque `<li class="video-card">` cambiando el ID, el nombre y la imagen.
 
-- `imagen-dance4.png`: presentación de shows.
-- `imagen-dance1.png`: comunidad del estudio.
-- `imagen-dance3.png`: anuncio de baile moderno en la cartelera.
-- `imagen-dance5.png`: fotografía de la sección Encuentra tu ritmo, servida como `assets/media/dance-rhythm.webp`.
-- `video_dance_central.mp4`: fragmento de 13 segundos, del segundo 6 al 19, sin audio y preparado para reproducción web.
-- `logo-dance.svg`: origen del símbolo usado en la cabecera.
+## Notas de implementación
 
-Las tres imágenes se prepararon como WebP con un peso conjunto aproximado de 588 KB. El video original y las fotos no se modificaron. La fuente se sirve localmente. El mapa incrustado necesita conexión a Google Maps y se carga de forma diferida al acercarse a la sección.
+- **El logotipo** son dos máscaras CSS (`dance-dance.svg` y `dance-central.svg`) para poder dar un color a cada palabra según el estado del header.
+- **El video de portada** tiene dos versiones: recorte 16:9 para pantallas apaisadas y el original vertical para las verticales. La fuente se elige con `matchMedia` en `main.js`, no con el atributo `media` de `<source>`, que no es fiable dentro de `<video>`.
+- **Las tarjetas de `videos.html`** abren YouTube en una pestaña nueva; no incrustan el reproductor.
+- **Los carruseles** comparten `initCarousel()` en `main.js`. El avance automático es opcional, con `data-carousel-autoplay="7000"`.
+- **El formulario de contacto** no envía nada: compone el mensaje y abre WhatsApp para que la visitante lo revise.
 
-## Información a confirmar antes de publicar
+## Despliegue
 
-El teléfono, la ubicación y las redes se transcribieron del material proporcionado. Deben revisarse con el negocio antes de publicar. No se inventaron paquetes, precios ni disponibilidad de clases. Los estilos corresponden a las publicaciones compartidas y sus enlaces invitan a consultar disponibilidad.
-
-El cartel del intensivo compartido en el chat todavía no está en la carpeta de imágenes. La cartelera ya muestra el material de clases disponible y admite nuevos anuncios de cursos con información vigente confirmada.
-
-## Referencias de dirección visual
-
-- Nederlands Dans Theater: https://www.ndt.nl/en/
-- BASE Dance Studios: https://www.basedancestudios.com/
-
-La composición usa el material de Dance Central. No se copiaron código, fotografías ni videos de los sitios de referencia.
-
-## Color y tipografía
-
-El acento de marca es morado ciruela (#71437e). En algunos títulos, la clase .split-ink aplica un corte diagonal negro/morado dentro de cada letra. El fondo del estudio y los detalles de contacto usan variantes suaves del mismo color.
-
-## Mapa, testimonios y redes
-
-- El mapa consulta el nombre y la dirección de Dance Central. Los botones alternan la vista callejera y la satelital manteniendo esa ubicación. Se verificaron visualmente ambas vistas y el marcador del estudio.
-- La sección de experiencias contiene tres textos ficticios, identificados como testimonios de muestra. Deben sustituirse por reseñas reales antes de publicar una versión comercial.
-- El footer incluye iconos SVG de Instagram y Facebook, junto con etiquetas de texto y enlaces a los perfiles.
-- El efecto diagonal de los títulos se aplica a cada letra. Los lectores de pantalla reciben una sola copia del texto.
-
-Referencia para insertar mapas: https://support.google.com/maps/answer/7101463?hl=es
-## Llamado a la acción y movimiento
-
-- WhatsApp queda fijo en la esquina inferior derecha. En escritorio incluye texto; en móvil usa el icono con nombre accesible.
-- Los títulos aparecen por palabras y los fragmentos bicolor por letras. Las fotos y algunos textos entran al alcanzar su sección; cada aparición se reproduce una sola vez por carga.
-- La animación del logo ya no se bloquea mediante sessionStorage. Se omite si la página se abre en una sección interior, si se empieza a desplazar o si está activada la preferencia de movimiento reducido.
-- Al activar movimiento reducido se completan las animaciones pendientes y el contenido permanece visible. Sin JavaScript, los textos, la imagen y el enlace flotante siguen disponibles.
-- Se retiró el párrafo explicativo de los testimonios. Se mantienen las etiquetas breves que identifican las opiniones como ejemplos.
-## Imágenes y actualización de estilos
-
-- Las fotos tienen un zoom suave de 4.5% al pasar el cursor; los carteles usan 2.5%. El encuadre contiene el efecto para que no se desplace el contenido. Los videos conservan sus controles sin zoom.
-- El botón flotante de WhatsApp cambia gradualmente de morado a negro al pasar el cursor. Su SVG tiene dimensiones explícitas de 29 x 29 tanto en HTML como en CSS.
-- Las referencias a CSS y JavaScript llevan una versión basada en su contenido para evitar mezclar HTML actualizado con archivos antiguos en caché. Al cambiar esos archivos, actualiza el parámetro `v` de sus referencias en `index.html`.
-- El zoom se activa con ratón o trackpad y se omite con la preferencia de movimiento reducido.
+Netlify, desde la rama `main`. No requiere build: el directorio de publicación es la raíz.
