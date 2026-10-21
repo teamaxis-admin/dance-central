@@ -1,0 +1,36 @@
+/* Página 404. Netlify la sirve sola en cualquier ruta que no exista. */
+
+.page-404 { background: var(--paper); }
+.page-404 .site-header {
+  position: fixed;
+  background: var(--paper);
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  --nav-paint: #e6c65b;
+}
+.page-404 .site-header .brand-word { color: #191b19; }
+.page-404 .site-header .brand-sub { color: #e7c83e; }
+
+.not-found {
+  padding-top: 160px;
+  min-height: 72svh;
+  display: flex;
+  flex-direction: column;
+}
+.nf-body { margin-top: auto; max-width: 820px; }
+.not-found h1 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: clamp(60px,9vw,150px);
+  line-height: .92;
+  letter-spacing: -.02em;
+}
+.nf-body > p { font-size: 17px; color: var(--muted); max-width: 460px; margin-top: 26px; }
+.nf-links { display: flex; flex-wrap: wrap; gap: 18px 46px; margin-top: 44px; }
+
+@media (max-width: 760px) {
+  .not-found { padding-top: 112px; min-height: 60svh; }
+  .nf-body > p { font-size: 15px; margin-top: 20px; }
+  .nf-links { display: block; margin-top: 30px; }
+  .nf-links .text-link { display: flex; margin-top: 10px; }
+}

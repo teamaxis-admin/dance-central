@@ -28,7 +28,23 @@ header.addEventListener("focusout", () => {
 desktop.addEventListener("change", () => setMenu(false));
 
 function updateHeader() { header.classList.toggle("scrolled", window.scrollY > 100); }
-window.addEventListener("scroll", updateHeader, { passive: true });
+
+// El botón de WhatsApp se aparta al bajar y vuelve al subir, para no taparle
+// la lectura a nadie. Se prefirió esto a hacerlo arrastrable: en pantallas
+// táctiles el gesto de arrastrar compite con el de desplazar la página.
+const whatsapp = document.querySelector(".whatsapp-float");
+let lastScroll = window.scrollY;
+function updateWhatsapp() {
+  if (!whatsapp) return;
+  const y = Math.max(0, window.scrollY);
+  // Umbral pequeño para que un temblor del dedo no lo haga parpadear.
+  if (Math.abs(y - lastScroll) > 6) {
+    whatsapp.classList.toggle("is-away", y > lastScroll && y > 260);
+    lastScroll = y;
+  }
+}
+
+window.addEventListener("scroll", () => { updateHeader(); updateWhatsapp(); }, { passive: true });
 updateHeader();
 
 // Fragmentos del propio símbolo: se abren y se reúnen sobre el logo real.
