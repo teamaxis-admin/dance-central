@@ -430,9 +430,6 @@ body .site-footer { padding-bottom: 96px; }
 @media (hover: hover) and (pointer: fine) {
   .footer-legal:hover { border-bottom-color: currentColor; }
 }
-@media (max-width: 760px) {
-  .footer-bottom > span:nth-child(2) { display: none; }
-}
 .to-top {
   display: grid;
   place-items: center;
@@ -445,15 +442,33 @@ body .site-footer { padding-bottom: 96px; }
   transition: background-color .25s ease, color .25s ease, border-color .25s ease;
 }
 .to-top > span { display: block; transition: transform .25s ease; }
-.to-top:focus-visible { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+/* Ojo: poster-surfaces.css invierte --ink dentro del footer (ahi vale #f5f3ed).
+   Por eso el fondo usa var(--ink) y la flecha va al color de fondo del
+   footer, literal, porque no existe variable para ese tono oscuro.
+   Si se cambia a var(--paper) vuelve a quedar blanco sobre blanco. */
+.to-top:focus-visible { background: var(--ink); color: #19161d; border-color: var(--ink); }
 .to-top:focus-visible > span { transform: translateY(-3px); }
 @media (hover: hover) and (pointer: fine) {
-  .to-top:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .to-top:hover { background: var(--ink); color: #19161d; border-color: var(--ink); }
   .to-top:hover > span { transform: translateY(-3px); }
 }
 @media (max-width: 760px) {
   .visit-details { text-align: left; }
   .to-top { width: 42px; height: 42px; font-size: 19px; }
+  /* Los dos textos apilados a la izquierda y el disco a la derecha ocupando
+     ambas filas. Con flex quedaban mal repartidos: 9px de texto junto a un
+     disco de 42px no se alinean. */
+  .footer-bottom {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px 16px;
+    align-items: center;
+    padding-right: 0;
+    font-size: 9px;
+  }
+  .footer-bottom > span:first-child { grid-area: 1 / 1; }
+  .footer-legal { grid-area: 2 / 1; justify-self: start; }
+  .to-top { grid-area: 1 / 2 / 3 / 3; justify-self: end; }
 }
 
 /* Una portada despejada y una sola consulta para clases y cursos. */

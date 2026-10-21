@@ -118,7 +118,6 @@
   .footer-socials .social-link { min-width: 68px; }
   .social-disc { width: 54px; height: 54px; }
   .footer-socials .social-link > .social-name { font-size: 12px; }
-  .footer-bottom { padding-right: 74px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .social-disc::before, .footer-socials .social-disc svg, .text-link::after,
