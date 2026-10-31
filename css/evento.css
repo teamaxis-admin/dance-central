@@ -1,0 +1,54 @@
+/* Próximo evento: franja temporal entre la portada y los shows. Los colores
+   salen del cartel de The Circus (terciopelo rojo y letras doradas). La franja
+   lleva data-event-until y main.js la oculta al día siguiente de esa fecha. */
+
+.event {
+  --ink: #f5f0e6;
+  --muted: #d9c8b8;
+  --line: #ffffff2e;
+  --gold: #e9b65c;
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+  background: #1c0b0d url('../assets/textures/paper-grain.svg');
+  background-image: url('../assets/textures/paper-grain.svg'), radial-gradient(ellipse at 80% 0%, #6b1219 0%, transparent 60%);
+}
+.event .section-heading > .eyebrow { color: var(--gold); }
+.event .small-note { color: var(--muted); }
+.event-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+.event h2 { font-size: clamp(56px, 6.6vw, 104px); }
+.event-sub { display: block; margin-top: 12px; font-family: Arial, Helvetica, sans-serif; font-size: 13px; font-weight: 500; letter-spacing: .32em; line-height: 1.2; color: var(--gold); }
+
+.event-facts { margin: 34px 0 0; }
+.event-facts > div { display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.event-facts > div:last-child { border-bottom: 1px solid var(--line); }
+.event-facts dt { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.event-facts dd { margin: 0; font-size: 15px; }
+
+.event-prices { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 30px; }
+.event-prices h3 { font-size: 26px; color: var(--gold); margin-bottom: 10px; }
+.event-prices ul { list-style: none; margin: 0; padding: 0; }
+.event-prices li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dotted var(--line); font-size: 15px; }
+.event-prices li > span:last-child { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.1; }
+
+.event-note { margin-top: 26px; font-size: 13px; color: var(--muted); max-width: 460px; }
+.event .text-link { margin-top: 18px; }
+
+.event-posters { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.event-posters a { display: block; color: inherit; }
+.event-posters img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; background: #120607; box-shadow: 0 18px 40px #0007; transition: transform .5s cubic-bezier(.2,.65,.3,1); }
+.event-posters a > span { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; padding-bottom: 9px; border-bottom: 1px solid currentColor; font-size: 13px; font-weight: 500; }
+.event-posters a:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .event-posters a:hover img { transform: translateY(-4px); }
+}
+
+@media (max-width: 1050px) {
+  .event-layout { gap: 40px; }
+}
+@media (max-width: 760px) {
+  .event-layout { display: block; }
+  .event-prices { gap: 20px; }
+  .event-prices h3 { font-size: 22px; }
+  .event-posters { margin-top: 40px; gap: 14px; }
+}

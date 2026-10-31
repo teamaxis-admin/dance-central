@@ -1,0 +1,157 @@
+/* Página de horarios y fichas. La semana es una retícula de seis columnas
+   (lunes a sábado) que en el celular se vuelve una lista por día.
+   El filtro solo pone [hidden] en las clases que no coinciden: sin
+   JavaScript se ve la semana completa y los botones no aparecen. */
+
+.page-hours { background: var(--paper); }
+.page-hours .site-header { position: fixed; background: var(--paper); color: var(--ink); border-bottom: 1px solid var(--line); --nav-paint: #e6c65b; }
+.page-hours .site-header .brand-word { color: #191b19; }
+.page-hours .site-header .brand-sub { color: #e7c83e; }
+
+.hours-page { padding-top: 150px; }
+.hours-intro { display: grid; grid-template-columns: 1.4fr 1fr; gap: 60px; align-items: end; margin-bottom: 56px; }
+.hours-intro h1 { font-family: var(--display); font-weight: 600; font-size: clamp(56px,7vw,112px); line-height: .93; letter-spacing: -.018em; }
+.hours-intro > p { font-size: 14px; color: var(--muted); max-width: 380px; padding-bottom: 10px; justify-self: end; }
+
+/* Filtro por disciplina */
+.schedule-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.schedule-filter button {
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.schedule-filter button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.schedule-filter button:focus-visible { outline: 2px solid var(--plum); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .schedule-filter button:hover { border-color: var(--ink); }
+}
+.schedule-status { min-height: 1.6em; margin-bottom: 14px; font-size: 12px; letter-spacing: .04em; color: var(--plum); }
+
+/* La semana */
+.schedule-days { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 0 22px; align-items: start; }
+.day { min-width: 0; border-top: 2px solid #242124; padding-top: 16px; }
+.day h3 { font-size: clamp(26px,2.3vw,36px); line-height: 1; margin-bottom: 6px; }
+.day-slots { list-style: none; margin: 0; padding: 0; }
+.slot { display: grid; gap: 3px; padding: 16px 0 18px; border-bottom: 1px solid var(--line); }
+.slot time { font-size: 11px; font-weight: 500; letter-spacing: .1em; color: var(--muted); }
+.slot-name { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1; text-transform: uppercase; }
+.slot-name small { display: block; margin-top: 4px; font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: 500; letter-spacing: .1em; color: var(--plum); }
+.slot-teacher { font-size: 13px; color: #4a4b45; }
+.slot-room { margin-top: 4px; font-size: 9px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); }
+.slot-flag { justify-self: start; margin-top: 4px; padding: 3px 7px; border: 1px solid var(--plum); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--plum); }
+.slot.is-company .slot-name, .slot.is-company .slot-teacher { color: var(--muted); }
+.schedule-note { max-width: 560px; margin-top: 28px; font-size: 12px; color: var(--muted); }
+.schedule-note strong { color: var(--plum); font-weight: 500; }
+
+/* Fichas. Las tarjetas repiten los tres colores del cartel y llevan
+   la D del logotipo pintada como máscara, igual que la cabecera. */
+.passes { background: #19161d; color: var(--paper); }
+.passes .small-note { color: #bbbdb2; }
+.passes h2 { margin-bottom: 48px; }
+.passes h2 em { color: var(--lavender); }
+.pass-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 30px; }
+.pass { min-width: 0; }
+.pass-card { position: relative; display: block; aspect-ratio: 16 / 9; margin-bottom: 26px; border-radius: 6px; box-shadow: 0 18px 40px #0006; }
+.pass-card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20%;
+  aspect-ratio: 680 / 745;
+  transform: translate(-50%, -50%);
+  background: #19161d;
+  -webkit-mask: url('../assets/logos/dance-mark.svg') center / contain no-repeat;
+  mask: url('../assets/logos/dance-mark.svg') center / contain no-repeat;
+}
+.pass-plata .pass-card { background: linear-gradient(135deg,#f6f6f3 0%,#b8b9b4 50%,#ebebe7 100%); }
+.pass-oro .pass-card { background: linear-gradient(135deg,#f6dc78 0%,#c99a1e 52%,#f1d167 100%); }
+.pass-full .pass-card { background: linear-gradient(135deg,#a8e86e 0%,#3e9c2b 55%,#8fdc55 100%); }
+.pass h3 { font-size: 34px; line-height: 1; }
+.pass-plata h3 { color: #e4e4e0; }
+.pass-oro h3 { color: #e7c83e; }
+.pass-full h3 { color: #a6d497; }
+.pass-classes { margin-top: 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #bfc1b7; }
+.pass-price { margin-top: 16px; font-family: var(--display); font-weight: 600; font-size: clamp(54px,5vw,76px); line-height: 1; letter-spacing: -.02em; }
+.pass-price span { font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .12em; color: #bfc1b7; vertical-align: middle; }
+.pass-terms { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 24px; margin: 56px 0 0; padding-top: 24px; border-top: 1px solid #ffffff38; }
+.pass-terms dt { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: #bfc1b7; }
+.pass-terms dd { margin: 8px 0 0; font-family: var(--display); font-weight: 600; font-size: 30px; line-height: 1.05; }
+
+/* Datos para transferencia. La CLABE se agrupa con márgenes y no con
+   espacios: al seleccionarla a mano se copian solo los 18 dígitos y la app
+   del banco no la rechaza por traer espacios. */
+.transfer { display: grid; grid-template-columns: 1fr 1.25fr; gap: 36px 60px; margin-top: 56px; padding: 34px; border: 1px solid #ffffff38; border-radius: 6px; }
+.transfer h3 { font-size: 34px; line-height: 1; }
+.transfer-head p { max-width: 340px; margin-top: 14px; font-size: 14px; color: #bfc1b7; }
+/* Enviar el comprobante y guardar la imagen de pago: esta última es para
+   reenviarla a quien vaya a pagar, que muchas veces no es el alumno. */
+.transfer-links { display: flex; flex-wrap: wrap; gap: 4px 32px; margin-top: 20px; }
+.transfer-data { display: grid; gap: 20px; margin: 0; }
+.transfer-data dt { font-size: 10px; letter-spacing: .13em; text-transform: uppercase; color: #bfc1b7; }
+.transfer-data dd { margin: 6px 0 0; font-size: 17px; }
+.transfer-clabe dd { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.clabe { font-family: var(--display); font-weight: 600; font-size: clamp(30px,3vw,42px); line-height: 1; letter-spacing: .01em; }
+.clabe span + span { margin-left: .3em; }
+.copy-clabe { min-height: 40px; padding: 9px 18px; border: 1px solid var(--paper); border-radius: 999px; background: transparent; color: var(--paper); font-size: 13px; transition: background-color .2s, color .2s; }
+.copy-clabe[data-copied] { background: var(--paper); color: #19161d; }
+.copy-clabe:focus-visible { outline: 2px solid var(--lavender); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .copy-clabe:hover { background: var(--paper); color: #19161d; }
+}
+
+/* Carteles para descargar */
+.posters h2 { margin-bottom: 40px; }
+.poster-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 24px; }
+.poster-link { display: block; color: inherit; }
+.poster-link img { width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; background: #19161d; transition: transform .5s cubic-bezier(.2,.65,.3,1); }
+.poster-name { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding-bottom: 10px; border-bottom: 1px solid currentColor; font-size: 13px; font-weight: 500; }
+.poster-link:focus-visible { outline: 3px solid var(--plum); outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .poster-link:hover img { transform: translateY(-4px); }
+}
+.hours-cta { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); }
+.hours-cta > p { font-family: var(--display); font-size: 28px; }
+
+@media (max-width: 1050px) {
+  .hours-intro { gap: 36px; }
+  .schedule-days { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 36px 22px; }
+  .pass-list { gap: 22px; }
+  .pass-terms { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 760px) {
+  .hours-page { padding-top: 112px; }
+  .hours-intro { display: block; margin-bottom: 36px; }
+  .hours-intro > p { margin-top: 24px; max-width: none; }
+  /* En el celular los catorce botones van en una sola fila que se desliza,
+     en vez de ocupar media pantalla antes de llegar a los horarios. */
+  .schedule-filter { flex-wrap: nowrap; overflow-x: auto; margin: 0 calc(-1 * var(--gutter)) 14px; padding: 2px var(--gutter) 8px; scrollbar-width: none; }
+  .schedule-filter::-webkit-scrollbar { display: none; }
+  .schedule-filter button { flex: none; }
+  .schedule-days { grid-template-columns: 1fr; gap: 34px; }
+  .slot { grid-template-columns: 76px minmax(0,1fr); column-gap: 12px; padding: 14px 0 15px; }
+  .slot > * { grid-column: 2; }
+  .slot time { grid-column: 1; grid-row: 1 / span 3; padding-top: 5px; }
+  .slot-name { font-size: 23px; }
+  .pass-list { grid-template-columns: 1fr; gap: 44px; }
+  .pass-card { max-width: 420px; }
+  .pass-terms { gap: 22px 16px; margin-top: 44px; }
+  .pass-terms dd { font-size: 24px; }
+  .transfer { grid-template-columns: 1fr; gap: 28px; margin-top: 44px; padding: 24px 20px; }
+  .transfer h3 { font-size: 30px; }
+  .clabe { font-size: 27px; }
+  .poster-list { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 26px 16px; }
+  .hours-cta { display: block; margin-top: 44px; }
+  .hours-cta .text-link { margin-top: 14px; }
+  .hours-cta > p { font-size: 24px; }
+}
+@media (forced-colors: active) {
+  .schedule-filter button[aria-pressed="true"] { outline: 2px solid Highlight; }
+  .pass-card { border: 1px solid CanvasText; }
+}

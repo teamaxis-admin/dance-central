@@ -47,20 +47,6 @@
   transition: transform .35s ease;
 }
 .text-link:focus-visible::after { transform: scaleX(1); }
-.show-row { position: relative; isolation: isolate; }
-.show-row::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: #71437e0b;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform .4s cubic-bezier(.2,.65,.3,1);
-  pointer-events: none;
-}
-.show-row:focus-visible::before { transform: scaleX(1); }
-.show-row:focus-visible { color: var(--plum); }
 
 /* Fill the enquiry button, with the arrow moving in the same direction. */
 .submit-button { position: relative; isolation: isolate; overflow: hidden; }
@@ -84,7 +70,7 @@
 @media (hover: hover) and (pointer: fine) {
   .social-link:hover .social-disc::before { transform: translateY(0); }
   .footer-socials .social-link:hover svg { color: #fff; }
-  .text-link:hover::after, .show-row:hover::before { transform: scaleX(1); }
+  .text-link:hover::after { transform: scaleX(1); }
   .submit-button:hover::before { transform: translateY(0); }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
@@ -120,12 +106,11 @@
   .footer-socials .social-link > .social-name { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .social-disc::before, .footer-socials .social-disc svg, .text-link::after,
-  .show-row::before, .submit-button::before, .submit-button > span[aria-hidden] { transition: none; }
+  .social-disc::before, .footer-socials .social-disc svg, .text-link::after, .submit-button::before, .submit-button > span[aria-hidden] { transition: none; }
   .split-ink:hover .split-glyph { animation: none; transform: none; }
 }
 @media (forced-colors: active) {
   .social-disc { border-color: LinkText; background: Canvas; }
   .footer-socials .social-link svg { color: LinkText; }
-  .social-disc::before, .show-row::before, .submit-button::before { display: none; }
+  .social-disc::before, .submit-button::before { display: none; }
 }

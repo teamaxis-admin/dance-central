@@ -30,7 +30,7 @@ const menuButton = document.querySelector(".menu-toggle");
 const mobileMenu = document.querySelector(".mobile-menu");
 
 if (menuButton && mobileMenu && header) {
-  const desktop = window.matchMedia("(min-width: 761px)");
+  const desktop = window.matchMedia("(min-width: 961px)");
   const setMenu = (open, returnFocus = false) => {
     mobileMenu.hidden = !open;
     menuButton.setAttribute("aria-expanded", String(open));

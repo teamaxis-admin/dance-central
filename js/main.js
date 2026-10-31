@@ -7,6 +7,8 @@ const mobileMenu = document.querySelector(".mobile-menu");
 const video = document.querySelector("#hero-video");
 const videoButton = document.querySelector("#video-toggle");
 const desktop = window.matchMedia("(min-width: 761px)");
+// El menú completo aparece desde 961 px (ver el último bloque de styles.css).
+const fullNav = window.matchMedia("(min-width: 961px)");
 
 function setMenu(open, returnFocus = false) {
   mobileMenu.hidden = !open;
@@ -25,7 +27,7 @@ document.addEventListener("click", event => {
 header.addEventListener("focusout", () => {
   requestAnimationFrame(() => { if (!header.contains(document.activeElement)) setMenu(false); });
 });
-desktop.addEventListener("change", () => setMenu(false));
+fullNav.addEventListener("change", () => setMenu(false));
 
 function updateHeader() { header.classList.toggle("scrolled", window.scrollY > 100); }
 
@@ -273,18 +275,6 @@ function syncInquiry() {
   formStatus.textContent = classes ? "Consulta horarios, niveles y costos. Se abrirá WhatsApp con tu mensaje listo." : "Se abrirá WhatsApp con tu consulta lista para enviar.";
 }
 eventType.addEventListener("change", syncInquiry);
-document.querySelectorAll("[data-event]").forEach(link => {
-  link.addEventListener("click", () => {
-    eventType.value = link.dataset.event;
-    syncInquiry();
-  });
-});
-document.querySelectorAll('[data-inquiry="classes"]').forEach(link => {
-  link.addEventListener("click", () => {
-    eventType.value = "Clases y cursos";
-    syncInquiry();
-  });
-});
 syncInquiry();
 window.addEventListener("pageshow", syncInquiry);
 
@@ -319,6 +309,14 @@ document.querySelectorAll("[data-map-type]").forEach(button => {
     document.querySelector("#map-status").textContent = satellite ? "Vista satelital" : "Vista de mapa";
   });
 });
+
+// Próximo evento: desaparece solo al día siguiente de su fecha (hora local),
+// para que no quede anunciado un evento vencido. Sin JavaScript se sigue viendo.
+const eventSection = document.querySelector("[data-event-until]");
+if (eventSection) {
+  const [year, month, day] = eventSection.dataset.eventUntil.split("-").map(Number);
+  if (new Date() >= new Date(year, month - 1, day + 1)) eventSection.hidden = true;
+}
 
 // Cartelera real: admite carteles completos y videos con controles nativos.
 const courses = Array.isArray(window.danceCourses) ? window.danceCourses : [];
@@ -476,7 +474,7 @@ function initCarousel(carousel) {
 }
 document.querySelectorAll("[data-carousel]").forEach(initCarousel);
 
-const galleryVideos = [...document.querySelectorAll(".media-carousel video, .panel-media video")];
+const galleryVideos = [...document.querySelectorAll(".media-carousel video, .panel-media video, .studio-film video")];
 galleryVideos.forEach(clip => {
   clip.addEventListener("play", () => {
     galleryVideos.forEach(other => { if (other !== clip) other.pause(); });
@@ -492,9 +490,63 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) galleryVideos.forEach(clip => clip.pause());
 });
 
+// Los videos largos van en HLS (trozos de 4 s en dos calidades) porque
+// Cloudflare Pages no sirve archivos de más de 25 MB y en un solo MP4 no
+// cabían sin perder calidad. El MP4 de <source> queda como respaldo ligero.
+// Safari reproduce HLS por sí mismo; los demás cargan hls.js cuando el video
+// se acerca a la pantalla, y la descarga empieza hasta que le dan play.
+let hlsLibrary;
+function loadHls() {
+  hlsLibrary ??= new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "js/vendor/hls.light.min.js";
+    script.onload = () => resolve(window.Hls);
+    script.onerror = reject;
+    document.head.append(script);
+  });
+  return hlsLibrary;
+}
+async function prepareStream(clip) {
+  if (clip.dataset.hlsReady || !clip.paused) return;
+  clip.dataset.hlsReady = "true";
+  const playlist = clip.dataset.hls;
+  if (clip.canPlayType("application/vnd.apple.mpegurl")) {
+    clip.src = playlist;
+    return;
+  }
+  try {
+    const Hls = await loadHls();
+    if (!Hls?.isSupported() || !clip.paused) return;
+    const hls = new Hls({ autoStartLoad: false });
+    hls.on(Hls.Events.ERROR, (event, data) => {
+      if (!data.fatal) return;
+      // Sin trozos se vuelve al MP4 de respaldo.
+      hls.destroy();
+      clip.removeAttribute("src");
+      clip.load();
+    });
+    hls.loadSource(playlist);
+    hls.attachMedia(clip);
+    clip.addEventListener("play", () => hls.startLoad(), { once: true });
+  } catch {
+    // Si hls.js no carga, el video sigue con el MP4.
+  }
+}
+const streamVideos = [...document.querySelectorAll("video[data-hls]")];
+if ("IntersectionObserver" in window) {
+  const streamObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      streamObserver.unobserve(entry.target);
+      prepareStream(entry.target);
+    });
+  }, { rootMargin: "600px 0px" });
+  streamVideos.forEach(clip => streamObserver.observe(clip));
+}
+
 // El contenido permanece visible sin JavaScript. Las apariciones se ejecutan
 // una vez por elemento, y se completan si se activa movimiento reducido.
-const motionHeadings = [...document.querySelectorAll("h1, h2, .courses h3, .show-row h3, .footer-wordmark")];
+const motionHeadings = [...document.querySelectorAll("h1, h2, .courses h3, .show-card h3, .footer-wordmark")];
 const motionDetails = [...document.querySelectorAll(".section-heading, .shows-intro > p, .studio-copy > p, .studio-photo, .class-poster, .testimonial-carousel, .courses-copy, .visit-details, .footer-socials")];
 const motionPlayed = new WeakSet();
 const runningMotions = new Set();
@@ -633,26 +685,28 @@ function setupMotion() {
 setupMotion();
 reducedMotion.addEventListener("change", setupMotion);
 
-// Vista por disciplina. Cada estilo tiene su propia ancla (#estilo-...): sin
-// JavaScript los paneles quedan visibles en fila y los enlaces siguen llevando
-// a cada uno. Con JavaScript se muestra uno a la vez, el resto de la sección
-// permanece debajo y el botón de regresar del navegador funciona.
-const classBrowse = document.querySelector("#class-browse");
-const stylePanels = [...document.querySelectorAll(".style-panel")];
-if (classBrowse && stylePanels.length) {
-  const classSection = document.querySelector("#clases");
-  const panelFor = slug => stylePanels.find(panel => panel.id === `estilo-${slug}`);
-  const slugOf = panel => panel.id.replace("estilo-", "");
+// Vista por disciplina (#estilo-...) y por tipo de show (#show-...). Cada panel
+// tiene su propia ancla: sin JavaScript los paneles quedan visibles en fila y
+// los enlaces siguen llevando a cada uno. Con JavaScript se muestra uno a la
+// vez, el resto de la sección permanece debajo y el botón de regresar del
+// navegador funciona.
+function setupPanels(section, browse, prefix, linkAttribute) {
+  const panels = section ? [...section.querySelectorAll(".style-panel")] : [];
+  if (!browse || !panels.length) return;
+  const panelFor = slug => panels.find(panel => panel.id === `${prefix}${slug}`);
+  const slugOf = panel => panel.id.slice(prefix.length);
+  const panelHash = new RegExp(`^#${prefix}([a-z0-9-]+)$`);
+  const links = [...section.querySelectorAll(`[data-${linkAttribute}]`)];
 
   function goToSection(instant) {
-    classSection.scrollIntoView({
+    section.scrollIntoView({
       behavior: instant || reducedMotion.matches ? "instant" : "smooth",
       block: "start"
     });
   }
   function showPanel(panel, moveFocus) {
-    stylePanels.forEach(item => { item.hidden = item !== panel; });
-    classBrowse.hidden = Boolean(panel);
+    panels.forEach(item => { item.hidden = item !== panel; });
+    browse.hidden = Boolean(panel);
     // Los videos de un panel cerrado no siguen sonando.
     galleryVideos.forEach(clip => {
       const owner = clip.closest(".style-panel");
@@ -661,9 +715,9 @@ if (classBrowse && stylePanels.length) {
     if (panel && moveFocus) panel.querySelector("h3").focus({ preventScroll: true });
   }
   function syncPanel(instant, moveFocus) {
-    const slug = location.hash.match(/^#estilo-([a-z0-9-]+)$/)?.[1];
+    const slug = location.hash.match(panelHash)?.[1];
     const panel = slug ? panelFor(slug) : null;
-    const wasOpen = stylePanels.some(item => !item.hidden);
+    const wasOpen = panels.some(item => !item.hidden);
     showPanel(panel, moveFocus);
     if (panel) { goToSection(instant); return; }
     // Al cerrar cambia la altura de la sección: recolocamos sobre el destino real.
@@ -672,23 +726,23 @@ if (classBrowse && stylePanels.length) {
     if (target) target.scrollIntoView({ behavior: "instant", block: "start" });
   }
 
-  document.querySelectorAll("[data-style]").forEach(link => {
+  links.forEach(link => {
     link.addEventListener("click", event => {
       if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const panel = panelFor(link.dataset.style);
+      const panel = panelFor(link.dataset[linkAttribute]);
       if (!panel) return;
       event.preventDefault();
-      history.pushState(null, "", `#estilo-${link.dataset.style}`);
+      history.pushState(null, "", `#${prefix}${link.dataset[linkAttribute]}`);
       showPanel(panel, true);
       goToSection(false);
     });
   });
-  stylePanels.forEach(panel => {
+  panels.forEach(panel => {
     panel.querySelector(".panel-back").addEventListener("click", event => {
       event.preventDefault();
-      history.pushState(null, "", "#clases");
+      history.pushState(null, "", `#${section.id}`);
       showPanel(null, false);
-      document.querySelector(`[data-style="${slugOf(panel)}"]`)?.focus({ preventScroll: true });
+      links.find(link => link.dataset[linkAttribute] === slugOf(panel))?.focus({ preventScroll: true });
       goToSection(false);
     });
   });
@@ -696,3 +750,13 @@ if (classBrowse && stylePanels.length) {
   window.addEventListener("popstate", () => syncPanel(false, false));
   syncPanel(true, false);
 }
+setupPanels(document.querySelector("#clases"), document.querySelector("#class-browse"), "estilo-", "style");
+setupPanels(document.querySelector("#shows"), document.querySelector("#show-browse"), "show-", "show");
+
+// Cotizar desde el panel de un show deja ese evento elegido en el formulario.
+document.querySelectorAll("[data-event-type]").forEach(link => {
+  link.addEventListener("click", () => {
+    eventType.value = link.dataset.eventType;
+    eventType.dispatchEvent(new Event("change"));
+  });
+});

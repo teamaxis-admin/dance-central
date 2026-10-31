@@ -4,6 +4,11 @@
    Con JavaScript se muestra uno a la vez y el resto de la página no se mueve. */
 
 .style-list { list-style: none; margin: 0; padding: 0; }
+/* Diez estilos en grupos y dos columnas: ocupan lo mismo que la foto de al lado. */
+.style-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; align-items: start; }
+.style-group + .style-group { margin-top: 26px; }
+.style-group-name { margin-bottom: 8px; font-size: 10px; letter-spacing: .13em; color: var(--plum); }
+.style-extra { margin-top: 28px; font-size: 13px; color: var(--muted); }
 .style-list > li { border-top: 1px solid var(--line); }
 .style-list > li:last-child { border-bottom: 1px solid var(--line); }
 .style-link {
@@ -11,13 +16,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 15px;
-  padding: 25px 0;
+  padding: 14px 0;
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 27px;
   line-height: 1.1;
   transition: color .2s ease;
 }
-.style-link > span { font-size: 25px; line-height: 1; transition: transform .25s ease; }
+.style-link > span { font-size: 20px; line-height: 1; transition: transform .25s ease; }
 .style-link:focus-visible { color: var(--plum); }
 .style-link:focus-visible > span { transform: translate(3px,-3px); }
 
@@ -53,6 +58,8 @@
 .panel-copy > p + p { margin-top: 14px; }
 .panel-copy .text-link { margin-top: 26px; }
 .panel-media { min-width: 0; }
+/* Estilos que aún no tienen fotos: solo el texto, sin la columna vacía. */
+.panel-body.is-text-only { grid-template-columns: minmax(0, 560px); }
 .panel-media figcaption { margin-top: 14px; font-size: 9px; letter-spacing: .13em; color: var(--muted); }
 .panel-carousel .carousel-slide img,
 .panel-media > figure > video {
@@ -79,10 +86,15 @@
 
 @media (max-width: 1050px) {
   .panel-body { gap: 40px; }
-  .style-link { font-size: 29px; }
+  .style-groups { column-gap: 24px; }
+  .style-link { font-size: 22px; gap: 10px; }
+  .style-link > span { font-size: 17px; }
 }
 @media (max-width: 760px) {
-  .style-link { font-size: 32px; padding: 22px 0; }
+  .style-groups { grid-template-columns: 1fr; }
+  .style-column + .style-column { margin-top: 26px; }
+  .style-link { font-size: 27px; padding: 15px 0; }
+  .style-link > span { font-size: 20px; }
   .style-panel h3 { font-size: clamp(42px,11vw,66px); }
   .panel-lead { font-size: 15px; margin-top: 15px; }
   .panel-body { display: block; margin-top: 26px; }

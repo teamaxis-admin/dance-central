@@ -1,0 +1,72 @@
+/* Shows para eventos: una tarjeta con portada por tipo de evento. Cada una
+   abre su panel (los mismos .style-panel de las disciplinas) con fotos y
+   videos de ese tipo de evento. */
+
+.show-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.show-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  column-gap: 14px;
+  align-items: start;
+  transition: color .2s ease;
+}
+.show-card .image-zoom { grid-column: 1 / -1; margin-bottom: 20px; }
+.show-card img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.show-card h3 { font-size: clamp(30px, 2.9vw, 44px); line-height: .96; }
+.show-arrow { font-size: 25px; line-height: 1; transition: transform .25s ease; }
+.show-card p { grid-column: 2 / -1; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.show-card:focus-visible { color: var(--plum); }
+.show-card:focus-visible .show-arrow { transform: translate(3px, -3px); }
+
+/* Las fotos verticales ya vienen centradas sobre su propio fondo, así que
+   todas las diapositivas comparten la proporción de las disciplinas. */
+.panel-carousel .carousel-slide > video {
+  width: 100%;
+  aspect-ratio: 1.5;
+  object-fit: contain;
+  background: #211923;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .show-card:hover { color: var(--plum); }
+  .show-card:hover .show-arrow { transform: translate(3px, -3px); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .show-card:hover .image-zoom img { transform: scale(1.045); }
+}
+
+@media (max-width: 1050px) {
+  .show-list { gap: 18px; }
+  .show-card { column-gap: 10px; }
+  .show-card h3 { font-size: 27px; }
+  .show-arrow { font-size: 21px; }
+  .show-card p { font-size: 11px; }
+}
+/* En celular las tarjetas se recorren de lado, como el filtro de horarios:
+   tres portadas apiladas ocuparían casi tres pantallas. */
+@media (max-width: 760px) {
+  .show-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 78%;
+    gap: 16px;
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .show-list::-webkit-scrollbar { display: none; }
+  .show-list > li { scroll-snap-align: start; }
+  .show-card h3 { font-size: 30px; }
+  .show-card p { font-size: 11px; }
+}
